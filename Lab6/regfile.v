@@ -89,7 +89,7 @@ endmodule
 
 // 5-to-32 decoder
 module decoder5to32(register, regno);
-    input [5:0] regno;
+    input [4:0] regno;
     output reg [31:0] register;
 
     always @ (regno) begin
@@ -134,83 +134,52 @@ module regfile(
     input clock,
     input reset,                // Resets the register selected by WriteReg.
     input RegWrite,             // Control signal. Is 1 if we want to write data into register.
-    input [5:0] WriteReg,       // Register address of the register we wanna write into.
+    input [4:0] WriteReg,       // Register address of the register we wanna write into.
     input [31:0] WriteData,     // The data that we wanna write into the register.
     input [5:0] ReadReg1,       // The first register that we wanna read.
     input [5:0] ReadReg2,       // The second register that we wanna read.
     output [31:0] ReadData1,    // Data from the first register read.
     output [31:0] ReadData2     // Data from the second register read.
 );
-    wire [31:0] decodeout;
-    wire [31:0] Q0, Q1, Q2, Q3,
-                Q4, Q5, Q6, Q7,
-                Q8, Q9, Q10, Q11,
-                Q12, Q13, Q14, Q15,
-                Q16, Q17, Q18, Q19,
-                Q20, Q21, Q22, Q23,
-                Q24, Q25, Q26, Q27,
-                Q28, Q29, Q30, Q31;
 
+    wire [31:0] decodeout;
     decoder5to32 d532(decodeout, WriteReg);
+
     wire act;
     assign act = clock & RegWrite;
 
-    reg32 r0 (Q0,   WriteData,  act & decodeout[0],   reset);
-    reg32 r1 (Q1,   WriteData,  act & decodeout[1],   reset);
-    reg32 r2 (Q2,   WriteData,  act & decodeout[2],   reset);
-    reg32 r3 (Q3,   WriteData,  act & decodeout[3],   reset);
-    reg32 r4 (Q4,   WriteData,  act & decodeout[4],   reset);
-    reg32 r5 (Q5,   WriteData,  act & decodeout[5],   reset);
-    reg32 r6 (Q6,   WriteData,  act & decodeout[6],   reset);
-    reg32 r7 (Q7,   WriteData,  act & decodeout[7],   reset);
-    reg32 r8 (Q8,   WriteData,  act & decodeout[8],   reset);
-    reg32 r9 (Q9,   WriteData,  act & decodeout[9],   reset);
-    reg32 r10(Q10,  WriteData,  act & decodeout[10],  reset);
-    reg32 r11(Q11,  WriteData,  act & decodeout[11],  reset);
-    reg32 r12(Q12,  WriteData,  act & decodeout[12],   reset);
-    reg32 r13(Q13,  WriteData,  act & decodeout[13],  reset);
-    reg32 r14(Q14,  WriteData,  act & decodeout[14],  reset);
-    reg32 r15(Q15,  WriteData,  act & decodeout[15],  reset);
-    reg32 r16(Q16,  WriteData,  act & decodeout[16],  reset);
-    reg32 r17(Q17,  WriteData,  act & decodeout[17],  reset);
-    reg32 r18(Q18,  WriteData,  act & decodeout[18],  reset);
-    reg32 r19(Q19,  WriteData,  act & decodeout[19],  reset);
-    reg32 r20(Q20,  WriteData,  act & decodeout[20],  reset);
-    reg32 r21(Q21,  WriteData,  act & decodeout[21],  reset);
-    reg32 r22(Q22,  WriteData,  act & decodeout[22],  reset);
-    reg32 r23(Q23,  WriteData,  act & decodeout[23],  reset);
-    reg32 r24(Q24,  WriteData,  act & decodeout[24],  reset);
-    reg32 r25(Q25,  WriteData,  act & decodeout[25],  reset);
-    reg32 r26(Q26,  WriteData,  act & decodeout[26],  reset);
-    reg32 r27(Q27,  WriteData,  act & decodeout[27],  reset);
-    reg32 r28(Q28,  WriteData,  act & decodeout[28],  reset);
-    reg32 r29(Q29,  WriteData,  act & decodeout[29],  reset);
-    reg32 r30(Q30,  WriteData,  act & decodeout[30],  reset);
-    reg32 r31(Q31,  WriteData,  act & decodeout[31],  reset);
+    wire [31:0] file[31:0];
+
+    genvar j;
+    generate
+        for (j = 0; j < 32; j = j+1) begin
+            reg32 r(file[j], WriteData, act & decodeout[j], reset);
+        end
+    endgenerate
 
     mux32to1 m1(
         ReadData1,
-        Q0,  Q1,  Q2,  Q3,
-        Q4,  Q5,  Q6,  Q7,
-        Q8,  Q9,  Q10, Q11,
-        Q12, Q13, Q14, Q15,
-        Q16, Q17, Q18, Q19,
-        Q20, Q21, Q22, Q23,
-        Q24, Q25, Q26, Q27,
-        Q28, Q29, Q30, Q31,
+        file[0],  file[1],  file[2],  file[3],
+        file[4],  file[5],  file[6],  file[7],
+        file[8],  file[9],  file[10], file[11],
+        file[12], file[13], file[14], file[15],
+        file[16], file[17], file[18], file[19],
+        file[20], file[21], file[22], file[23],
+        file[24], file[25], file[26], file[27],
+        file[28], file[29], file[30], file[31],
         ReadReg1
     );
 
     mux32to1 m2(
         ReadData2,
-        Q0,  Q1,  Q2,  Q3,
-        Q4,  Q5,  Q6,  Q7,
-        Q8,  Q9,  Q10, Q11,
-        Q12, Q13, Q14, Q15,
-        Q16, Q17, Q18, Q19,
-        Q20, Q21, Q22, Q23,
-        Q24, Q25, Q26, Q27,
-        Q28, Q29, Q30, Q31,
+        file[0],  file[1],  file[2],  file[3],
+        file[4],  file[5],  file[6],  file[7],
+        file[8],  file[9],  file[10], file[11],
+        file[12], file[13], file[14], file[15],
+        file[16], file[17], file[18], file[19],
+        file[20], file[21], file[22], file[23],
+        file[24], file[25], file[26], file[27],
+        file[28], file[29], file[30], file[31],
         ReadReg2
     );
 
